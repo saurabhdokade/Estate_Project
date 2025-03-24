@@ -7,11 +7,15 @@ const {
   resetPasswordAgent,
   getAllUser,
   updateAgentDetails,
+  getAgentDetails,
+  getAgentProperties,
   deleteUser,
   verifyOTP,
   verifyRegister,
   sendOTP,
-  resendOTP
+  resendOTP,
+  confirmVisit,
+  rescheduleVisit
 } = require("../controller/agentController");
 
 const { isAuthenticatedUser } = require("../middlewares/auth");
@@ -32,7 +36,14 @@ router.route("/resend").post(resendOTP)
 router.route("/password/forgot").post(forgotPasswordAgent);
 router.route("/password/reset/:token").put(resetPasswordAgent);
 router.route("/agent/agent-users").get(isAuthenticatedUser, apiLimiter, getAllUser); // List all users
+router.route("/agent/:agentId").get(getAgentDetails);
+router.route("/agent/:agentId/properties").get(getAgentProperties);
+
 router.route("/agent/:id").put(isAuthenticatedUser,apiLimiter, upload.single("userProfile"),updateAgentDetails) // Update user role
 router.route("/users/:id").delete(isAuthenticatedUser, apiLimiter, deleteUser); // Delete user
 
+
+//visit
+router.put("/confirm/:visitId", confirmVisit);
+router.put("/reschedule/:visitId", rescheduleVisit);
 module.exports = router;

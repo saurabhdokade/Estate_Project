@@ -21,7 +21,7 @@ const visitSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Confirmed', 'Cancelled'],
+    enum: ['Pending', 'Confirmed', 'Cancelled',"Rescheduled"],
     default: 'Pending'
   },
   shareWithDealer: {

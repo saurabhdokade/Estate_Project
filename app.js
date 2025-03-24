@@ -15,6 +15,7 @@ const builderRoutes = require("./routes/builderRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const SubscriptionRoutes = require("./routes/subscriptionRoute");
 const adminRoutes = require("./routes/adminRoutes")
+const compalintRoutes = require("./routes/complaintRoutes")
 // Initialize Express App
 app.use(express.json());
 app.use(cookieParser());
@@ -31,7 +32,8 @@ app.use("/api/v1",agentRoutes);
 app.use("/api/v1",builderRoutes);
 app.use("/api/v1",propertyRoutes);
 app.use("/api/v1/",SubscriptionRoutes);
-app.use("/api/v1/",adminRoutes)
+app.use("/api/v1/",adminRoutes);
+app.use("/api/v1/",compalintRoutes)
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,

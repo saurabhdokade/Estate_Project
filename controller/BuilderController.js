@@ -1,13 +1,15 @@
 const ErrorHander = require("../utils/errorhandler");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const User = require("../model/builderModel");
+const Settings = require("../model/settingsModel");
+const HelpSupport = require("../model/HelpSupport");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
 const jwt = require('jsonwebtoken');
 const twilio = require('twilio');
 const otpGenerator = require('otp-generator');
-const client = new twilio(process.env.TWILIO_ACCOUNT_SID || "AC7bb54231c103cfbc47c1392ef09054ee", process.env.TWILIO_AUTH_TOKEN || "403414025177e98738163ee945c25142");
+const client = new twilio(process.env.TWILIO_ACCOUNT_SID , process.env.TWILIO_AUTH_TOKEN);
 
 // const client = new twilio(process.env.TWILIO_ACCOUNT_SID || "AC7bb54231c103cfbc47c1392ef09054ee", process.env.TWILIO_AUTH_TOKEN || "403414025177e98738163ee945c25142");
 
@@ -38,7 +40,7 @@ exports.registerbuilder = catchAsyncErrors(async (req, res, next) => {
     try {
       await client.messages.create({
         body: message,
-        from: process.env.TWILIO_PHONE_NUMBER || "+1234567890",
+        from: process.env.TWILIO_PHONE_NUMBER,
         to: phone,
       });
     } catch (error) {
@@ -344,4 +346,64 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
         success: true,
         message: "User deleted successfully!",
     });
+});
+
+
+//settings and perfernce
+
+
+// Get user settings
+exports.getUserSettings = catchAsyncErrors(async (req, res, next) => {
+    const settings = await Settings.findOne({ userId: req.user.id });
+
+    if (!settings) {
+        return res.status(404).json({ success: false, message: "Settings not found" });
+    }
+
+    res.status(200).json({ success: true, settings });
+});
+
+// Update user settings
+exports.updateUserSettings = catchAsyncErrors(async (req, res, next) => {
+    let settings = await Settings.findOne({ userId: req.user.id });
+
+    if (!settings) {
+        settings = new Settings({ userId: req.user.id, ...req.body });
+    } else {
+        settings.notifications = req.body.notifications ?? settings.notifications;
+        settings.privacy = req.body.privacy ?? settings.privacy;
+        settings.language = req.body.language ?? settings.language;
+    }
+
+    await settings.save();
+
+    res.status(200).json({ success: true, message: "Settings updated", settings });
+});
+
+//help and contact support 
+
+// ✅ Get all FAQs
+exports.getFAQs = catchAsyncErrors(async (req, res) => {
+  const faqs = await HelpSupport.find({ category: "FAQ" });
+  res.status(200).json({ success: true, faqs });
+});
+
+// ✅ Submit a Support Request
+exports.contactSupport = catchAsyncErrors(async (req, res) => {
+  const { question } = req.body;
+  if (!question) return res.status(400).json({ success: false, message: "Question is required" });
+
+  const supportRequest = await HelpSupport.create({
+    userId: req.user.id,
+    category: "Support",
+    question,
+  });
+
+  res.status(201).json({ success: true, message: "Support request submitted", supportRequest });
+});
+
+// ✅ Get User’s Support Requests
+exports.getSupportRequests = catchAsyncErrors(async (req, res) => {
+  const requests = await HelpSupport.find({ userId: req.user.id, category: "Support" });
+  res.status(200).json({ success: true, requests });
 });

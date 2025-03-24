@@ -20,6 +20,11 @@ const propertySchema = new mongoose.Schema({
     ],
     required: true
   },
+  // transactionType: {
+  //   type: String,
+  //   enum: ["Buy", "Rent/PG"],
+  //   required: true
+  // },
   propertyImages: {
     type: [String],
     default:[]
@@ -76,6 +81,13 @@ const propertySchema = new mongoose.Schema({
       type: Number,
       required: true
     },
+    transactionType: {
+      type: String,
+      enum: ["Buy", "Rent/PG"],
+      required: true,
+    },
+    expectedPrice: { type: Number, required: function() { return this.transactionType === "Buy"; } },
+    rentPerMonth: { type: Number, required: function() { return this.transactionType === "Rent/PG"; } },
     priceNegotiable: {
       type: Boolean,
       default: false
@@ -143,7 +155,10 @@ const propertySchema = new mongoose.Schema({
   allowDirectCalls: {
     type: Boolean,
     default: false
-  }
+  },
+  isApproved: { type: Boolean, default: false }, // Admin approval
+  adminComments: { type: String }, // Admin comments
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Admin ID
 }, {
   timestamps: true
 });
