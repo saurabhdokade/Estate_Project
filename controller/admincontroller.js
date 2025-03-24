@@ -8,13 +8,14 @@ const Property = require('../model/propertyModel');
 const Lead = require("../model/enquiryModel");
 const Subscription = require('../model/subscriptionModel');
 const Visit = require('../model/visitModel');
+const Complaint = require("../model/complaintModel.js")
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
 const jwt = require('jsonwebtoken');
 const twilio = require('twilio');
 const otpGenerator = require('otp-generator');
-const client = new twilio(process.env.TWILIO_ACCOUNT_SID || "AC7bb54231c103cfbc47c1392ef09054ee", process.env.TWILIO_AUTH_TOKEN || "403414025177e98738163ee945c25142");
+const client = new twilio(process.env.TWILIO_ACCOUNT_SID , process.env.TWILIO_AUTH_TOKEN);
 
 // const client = new twilio(process.env.TWILIO_ACCOUNT_SID || "AC7bb54231c103cfbc47c1392ef09054ee", process.env.TWILIO_AUTH_TOKEN || "403414025177e98738163ee945c25142");
 
@@ -45,7 +46,7 @@ exports.registeradmin = catchAsyncErrors(async (req, res, next) => {
     try {
       await client.messages.create({
         body: message,
-        from: process.env.TWILIO_PHONE_NUMBER || "+1234567890",
+        from: process.env.TWILIO_PHONE_NUMBER ,
         to: phone,
       });
     } catch (error) {
@@ -572,7 +573,6 @@ exports.getSubscriptionById = catchAsyncErrors(async (req, res, next) => {
 
 
 //enquiry
-
 exports.getLeadsByProperty = catchAsyncErrors(async (req, res, next) => {
     const { propertyId } = req.params;
   
@@ -608,3 +608,116 @@ exports.getAllVisits = catchAsyncErrors(async (req, res, next) => {
     });
   });
   
+
+//property aproved
+// ✅ Approve Property (Admin Only)
+exports.approveProperty = catchAsyncErrors(async (req, res, next) => {
+  const { propertyId } = req.params;
+
+  // ✅ Check if the user is an admin
+  if (req.user.role !== "admin") {
+    return next(new ErrorHander("Access Denied! Admins Only.", 403));
+  }
+
+  // ✅ Find and update the property
+  const property = await Property.findByIdAndUpdate(
+    propertyId,
+    { isApproved: true, approvedBy: req.user._id },
+    { new: true, runValidators: true }
+  );
+
+  if (!property) {
+    return next(new ErrorHander("Property Not Found!", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Property Approved Successfully!",
+    property,
+  });
+});
+
+// ✅ Add Comment to Property (Admin Only)
+exports.commentOnProperty = catchAsyncErrors(async (req, res, next) => {
+  const { propertyId } = req.params;
+  const { adminComments } = req.body;
+
+  // ✅ Check if the user is an admin
+  if (req.user.role !== "admin") {
+    return next(new ErrorHander("Access Denied! Admins Only.", 403));
+  }
+
+  // ✅ Find and update the property
+  const property = await Property.findByIdAndUpdate(
+    propertyId,
+    { adminComments },
+    { new: true, runValidators: true }
+  );
+
+  if (!property) {
+    return next(new ErrorHander("Property Not Found!", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Comment Added Successfully!",
+    property,
+  });
+});
+
+//complaint user
+
+// 📌 Get All Complaints
+exports.getComplaints = catchAsyncErrors(async (req, res, next) => {
+    const complaints = await Complaint.find();
+    res.status(200).json({ success: true, complaints });
+});
+
+// 📌 Mark Complaint as Resolved
+exports.resolveComplaint = catchAsyncErrors(async (req, res, next) => {
+    const { id } = req.params;
+
+    const complaint = await Complaint.findById(id);
+    if (!complaint) {
+        return next(new ErrorHander("Complaint not found", 404));
+    }
+
+    complaint.status = "Resolved";
+    await complaint.save();
+
+    // Send resolution email
+    await sendEmail({
+        email: complaint.email,
+        subject: "Complaint Resolved",
+        message: `Dear ${complaint.name}, your complaint has been resolved.`,
+    });
+
+    res.status(200).json({
+        success: true,
+        message: "Complaint marked as resolved."
+    });
+});
+
+// 📌 Delete Complaint
+exports.deleteComplaint = catchAsyncErrors(async (req, res, next) => {
+    const { id } = req.params;
+
+    const complaint = await Complaint.findById(id);
+    if (!complaint) {
+        return next(new ErrorHander("Complaint not found", 404));
+    }
+
+    await complaint.deleteOne();
+    res.status(200).json({ success: true, message: "Complaint deleted successfully." });
+});
+
+exports.getComplaintById = catchAsyncErrors(async (req, res, next) => {
+  const { id } = req.params;
+
+  const complaint = await Complaint.findById(id); // Find complaint by ID
+  if (!complaint) {
+      return next(new ErrorHander("Complaint not found" ,404));
+  }
+
+  res.status(200).json({ success: true, complaint });
+});

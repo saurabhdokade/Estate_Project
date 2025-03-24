@@ -8,7 +8,7 @@ router.route("/send").post(isAuthenticatedUser , sendMessage);
 router.route("/:receiverId").get(isAuthenticatedUser,getChat);
 
 //notifications
-router.route("/get-notifications").get(isAuthenticatedUser, getUserNotifications);
+router.route("/user/get-notifications").get(isAuthenticatedUser, getUserNotifications);
 
 
 module.exports = router;

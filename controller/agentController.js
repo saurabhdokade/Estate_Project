@@ -1,13 +1,15 @@
 const ErrorHander = require("../utils/errorhandler");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const User = require("../model/agentModel");
+const Property = require("../model/propertyModel");
+const Visit = require("../model/visitModel")
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
 const jwt = require('jsonwebtoken');
 const twilio = require('twilio');
 const otpGenerator = require('otp-generator');
-const client = new twilio(process.env.TWILIO_ACCOUNT_SID || "AC7bb54231c103cfbc47c1392ef09054ee", process.env.TWILIO_AUTH_TOKEN || "403414025177e98738163ee945c25142");
+const client = new twilio(process.env.TWILIO_ACCOUNT_SID , process.env.TWILIO_AUTH_TOKEN );
 
 // const client = new twilio(process.env.TWILIO_ACCOUNT_SID || "AC7bb54231c103cfbc47c1392ef09054ee", process.env.TWILIO_AUTH_TOKEN || "403414025177e98738163ee945c25142");
 
@@ -38,7 +40,7 @@ exports.registerAgent = catchAsyncErrors(async (req, res, next) => {
     try {
       await client.messages.create({
         body: message,
-        from: process.env.TWILIO_PHONE_NUMBER || "+1234567890",
+        from: process.env.TWILIO_PHONE_NUMBER ,
         to: phone,
       });
     } catch (error) {
@@ -288,7 +290,7 @@ exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
     if (status) filter.status = status; // Exact match for status
 
     // Fetch users with or without filters
-    const users = await User.find(filter);
+    const users = await User.find(filter).populate("propertyId","location")
 
     res.status(200).json({
         success: true,
@@ -303,6 +305,55 @@ exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
             activityLogs: user.activityLogs,
         })),
     });
+});
+
+// Get details of an agent with properties
+exports.getAgentDetails = catchAsyncErrors(async (req, res, next) => {
+  const { agentId } = req.params;
+
+  // Find the agent
+  const agent = await User.findById(agentId);
+
+  if (!agent) {
+    return res.status(404).json({ success: false, message: "Agent not found" });
+  }
+
+  // Find properties associated with this agent
+  const properties = await Property.find({ userId: agentId }).select("propertyType location priceDetails.expectedPrice");
+
+  res.status(200).json({
+    success: true,
+    agent: {
+      id: agent._id,
+      name: agent.name,
+      email: agent.email,
+      phoneNumber: agent.phoneNumber, // Ensure correct field names
+      agencyName: agent.agencyName,
+      experience: agent.experience,
+      status: agent.status,
+      isVerified: agent.isVerified,
+      registrationDate: agent.createdAt, // Use createdAt from timestamps
+      profileImage: agent.profileImage,
+      properties, // List of associated properties
+    },
+  });
+});
+
+exports.getAgentProperties = catchAsyncErrors(async (req, res, next) => {
+  const { agentId } = req.params;
+
+  // Fetch properties listed by the given agent
+  const properties = await Property.find({ userId: agentId });
+
+  if (!properties.length) {
+    return res.status(404).json({ success: false, message: "No properties found for this agent" });
+  }
+
+  res.status(200).json({
+    success: true,
+    count: properties.length,
+    properties
+  });
 });
 
 // -------------------------- Update User Details (Admin Only) --------------------------
@@ -358,3 +409,48 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
         message: "User deleted successfully!",
     });
 });
+
+//visite confirm
+
+exports.confirmVisit = catchAsyncErrors(async (req, res, next) => {
+  const { visitId } = req.params;
+
+  const visit = await Visit.findByIdAndUpdate(
+    visitId,
+    { status: "Confirmed" },
+    { new: true }
+  );
+
+  if (!visit) {
+    return next(new ErrorHander("Visit not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Visit confirmed successfully",
+    visit,
+  });
+});
+
+// ✅ Reschedule Visit API
+exports.rescheduleVisit = catchAsyncErrors(async (req, res, next) => {
+  const { visitId } = req.params;
+  const { newVisitDate } = req.body;
+
+  const visit = await Visit.findByIdAndUpdate(
+    visitId,
+    { visitDate: newVisitDate, status: "Rescheduled" },
+    { new: true }
+  );
+
+  if (!visit) {
+    return next(new ErrorHander("Visit not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Visit rescheduled successfully",
+    visit,
+  });
+});
+

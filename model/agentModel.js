@@ -57,6 +57,10 @@ const userSchema = new mongoose.Schema({
     enum: ['Residential', 'Commercial', 'Rental', 'Other'],
     required: false,
   },
+  propertyId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref:"Property"
+  },
   experience: {
     type: Number,
     default: 0, // Years of experience
