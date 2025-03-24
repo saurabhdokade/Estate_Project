@@ -13,7 +13,12 @@ connectDatabase();
 // Create HTTP Server
 const server = http.createServer(app);
 
-
+app.use("/",(req,res) => {
+  res.json({
+    status:"API working fine",
+    code : 200
+  })
+})
 // Start the Server
 const PORT = process.env.PORT ||  5000;
 server.listen(PORT, () => {
