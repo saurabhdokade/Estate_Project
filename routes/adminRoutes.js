@@ -31,7 +31,7 @@ const {
   resolveComplaint,
   deleteComplaint,
   getComplaintById
-} = require("../controller/adminController");
+} = require("../controller/admincontroller");
 
 const {isAuthenticatedAdmin, authorizeRoles } = require("../middlewares/auth");
 const { apiLimiter, authLimiter } = require("../middlewares/rateLimiter");
