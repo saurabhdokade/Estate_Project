@@ -665,8 +665,6 @@ exports.commentOnProperty = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-//complaint user
-
 // 📌 Get All Complaints
 exports.getComplaints = catchAsyncErrors(async (req, res, next) => {
     const complaints = await Complaint.find();

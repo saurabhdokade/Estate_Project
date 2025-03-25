@@ -7,6 +7,7 @@
   "type": "commonjs",
   "main": "app.js",
   "scripts": {
+    "build": "npm rebuild bcrypt --build-from-source",
     "start": "nodemon server.js",
     "dev": "nodemon server.js",
     "test": "jest --watchAll"

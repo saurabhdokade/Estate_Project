@@ -8,7 +8,7 @@ const Notification = require("../model/notificationModel");
 exports.sendMessage = catchAsyncErrors(async (req, res, next) => {
   const { receiverId, message } = req.body;
 
-  const senderId = req.user.id; // Logged-in User ID
+  const senderId = req.user.id; 
 
   // Check if Receiver exists
   const receiverUser = await User.findById(receiverId);
@@ -31,7 +31,6 @@ exports.sendMessage = catchAsyncErrors(async (req, res, next) => {
     chat,
   });
 });
-
 
 // ✅ Get Chat Between Two Users
 exports.getChat = catchAsyncErrors(async (req, res, next) => {
@@ -57,7 +56,6 @@ exports.getChat = catchAsyncErrors(async (req, res, next) => {
     chat,
   });
 });
-
 
 // ✅ Get User Notifications
 exports.getUserNotifications = catchAsyncErrors(async (req, res, next) => {
