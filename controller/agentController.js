@@ -347,7 +347,7 @@ exports.resetPasswordAgent = catchAsyncErrors(async (req, res, next) => {
 
 // Get all users (admin) with optional filtering
 exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
-  const { name, email, role, status, locality } = req.query;
+  const { name, email, role, status, locality, operatingAreas, about } = req.query;
 
   // Build a dynamic filter object
   const filter = {};
@@ -356,7 +356,8 @@ exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
   if (role) filter.role = role; // Exact match for role
   if (status) filter.status = status; // Exact match for status
   if (locality) filter.locality = locality;
-
+  if (operatingAreas) filter.operatingAreas = operatingAreas
+  if (about) filter.about = about
   // Fetch users with or without filters
   const users = await User.find(filter).populate("propertyId", "location")
 
@@ -372,23 +373,28 @@ exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
       status: user.status,
       registrationDate: user.registrationDate,
       activityLogs: user.activityLogs,
+      operatingAreas: user.operatingAreas, 
+      about: user.about,
+      userProfile: user.userProfile,  
     })),
   });
 });
 
-// Get details of an agent with properties
+// Get details agent 
 exports.getAgentDetails = catchAsyncErrors(async (req, res, next) => {
   const { agentId } = req.params;
 
-  // Find the agent
-  const agent = await User.findById(agentId);
+  if (!mongoose.Types.ObjectId.isValid(agentId)) {
+    return res.status(400).json({ success: false, message: "Invalid agent ID" });
+  }
 
+  const agent = await User.findById(agentId);
   if (!agent) {
     return res.status(404).json({ success: false, message: "Agent not found" });
   }
 
-  // Find properties associated with this agent
-  const properties = await Property.find({ userId: agentId }).select("propertyType location priceDetails.expectedPrice");
+  const propertiesForSaleCount = await Property.countDocuments({ userId: agentId, "priceDetails.transactionType": "Buy" });
+  const propertiesForRentCount = await Property.countDocuments({ userId: agentId, "priceDetails.transactionType": "Rent/PG" });
 
   res.status(200).json({
     success: true,
@@ -396,19 +402,23 @@ exports.getAgentDetails = catchAsyncErrors(async (req, res, next) => {
       id: agent._id,
       name: agent.name,
       email: agent.email,
-      phoneNumber: agent.phoneNumber, // Ensure correct field names
+      phoneNumber: agent.phoneNumber,
       agencyName: agent.agencyName,
       experience: agent.experience,
       operatingAreas: agent.operatingAreas,
       about: agent.about,
+      locality: agent.locality,
       status: agent.status,
       isVerified: agent.isVerified,
-      registrationDate: agent.createdAt, // Use createdAt from timestamps
+      registrationDate: agent.createdAt,
       profileImage: agent.profileImage,
-      properties, // List of associated properties
+      propertiesForSale: propertiesForSaleCount,  
+      propertiesForRent: propertiesForRentCount,  
     },
   });
 });
+
+
 
 exports.getAgentProperties = catchAsyncErrors(async (req, res, next) => {
   const { agentId } = req.params;

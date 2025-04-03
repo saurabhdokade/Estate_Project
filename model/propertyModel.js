@@ -85,7 +85,7 @@ const propertySchema = new mongoose.Schema({
     },
     pricePerSqFt: {
       type: Number,
-      required: true
+      required: false
     },    
     transactionType: {
       type: String,
