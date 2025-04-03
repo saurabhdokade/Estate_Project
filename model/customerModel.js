@@ -8,15 +8,15 @@ const crypto = require("crypto");
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, "Please enter your name"],
+    required: [false, "Please enter your name"],
     maxLength: [30, "Name cannot exceed 30 characters"],
     minLength: [4, "Name should have more than 4 characters"],
     trim: true,
   },
   email: {
     type: String,
-    required: [true, "Please enter your email"],
-    unique: true,
+    required: [false, "Please enter your email"],
+    unique: false,
     validate: [validator.isEmail, "Please enter a valid email address"],
     lowercase: true,
     index: true,
@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, "Please enter your password"],
+    required: [false, "Please enter your password"],
     minLength: [8, "Password should be greater than 8 characters"],
     select: false,
   },
@@ -53,6 +53,10 @@ const userSchema = new mongoose.Schema({
     default:
       "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y",
   },
+   locality: {
+      type: String,
+      default: null,
+    },
   otp: {
     type: String,
   },
@@ -78,6 +82,11 @@ const userSchema = new mongoose.Schema({
   notificationPreference: {
     type: Boolean,
     default: true, 
+  },
+
+  agreedToTerms: {
+    type: Boolean,
+    required: [false, "You must agree to the Terms & Conditions"],
   },
 
 }, { timestamps: true });
@@ -142,4 +151,4 @@ userSchema.methods.generateVerificationCode = function () {
   return verificationCode;
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("UsersAuth", userSchema);

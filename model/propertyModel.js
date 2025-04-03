@@ -1,9 +1,15 @@
 const mongoose = require('mongoose');
 
 const propertySchema = new mongoose.Schema({
+  propertyName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  overview: { type: String, required: true },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Agent', // Refers to the user who posted the property
+        ref: 'Agent', 
         required: true
     },
   propertyType: {
@@ -80,7 +86,7 @@ const propertySchema = new mongoose.Schema({
     pricePerSqFt: {
       type: Number,
       required: true
-    },
+    },    
     transactionType: {
       type: String,
       enum: ["Buy", "Rent/PG"],
@@ -98,7 +104,7 @@ const propertySchema = new mongoose.Schema({
   },
   propertyStatus: {
     type: String,
-    enum: ['Ready to move', 'Under construction'],
+    enum: ['Ready to move', 'Under construction',"Just started"],
     required: true
   },
   status: {

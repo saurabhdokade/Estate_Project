@@ -11,6 +11,7 @@ const {
   verifyOTP,
   getSavedProperties,
   addRecentlyViewed,
+  logout,
   getContactedProperties,
   removeSavedProperty,
   addContactedProperty,
@@ -18,7 +19,13 @@ const {
   facebookLogin,
   addSavedProperty,
   getUserActivity,
-  sendOTP
+  getPrivacySettings,
+  sendOTP,
+  getNotifications,
+  updatePrivacySettings,
+  getAppSettings,
+  updateAppSettings,
+  updateNotifications
 } = require("../controller/customerController");
 
 const { isAuthenticatedUser } = require("../middlewares/auth");
@@ -39,6 +46,8 @@ router.post("/google-login", googleLogin);
 // Facebook Login
 router.post("/facebook-login", facebookLogin);
 router.route("/verify").post(verifyOTP);
+router.route("/logout").get(logout);
+
 router.route("/send-otp").post(sendOTP)
 router.route("/password/forgot").post(forgotPassword);
 router.route("/password/reset/:token").put(resetPassword);
@@ -60,4 +69,14 @@ router.delete("/saved", isAuthenticatedUser, removeSavedProperty);
 router.post("/contacted", isAuthenticatedUser, addContactedProperty);
 // router.route("/user/:id").get(isAuthenticatedUser, apiLimiter, getUsers)
 
+//user settings and prefernc 
+// Notification 
+router.get("/getsettings", isAuthenticatedUser, getNotifications);
+router.put("/update/settings", isAuthenticatedUser, updateNotifications);
+//privacy settings
+router.get("/getprivacy", isAuthenticatedUser, getPrivacySettings);
+router.put("/update/privacy", isAuthenticatedUser, updatePrivacySettings);
+//app settings 
+router.get("/notification", isAuthenticatedUser, getAppSettings);
+router.put("/update/notification", isAuthenticatedUser, updateAppSettings);
 module.exports = router;

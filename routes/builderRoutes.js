@@ -27,8 +27,10 @@ const upload = require("../utils/multer");
 
 const router = express.Router();
 router.route("/signup-builder").post(registerbuilder);
+router.route("/builder/verify").post(verifyOTP);
+router.route("/builder/send-otp").post(sendOTP)
 router.route("/builder/login").post(loginbuilder);
-router.route("/builder-verify").post(verifyOTP);
+// router.route("/builder-verify").post(verifyOTP);
 router.route("/verify-builder").post(verifyRegister)
 router.route("/builder-resend").post(resendOTP)
 router.route("/builder/password/forgot").post(forgotPasswordbuilder);

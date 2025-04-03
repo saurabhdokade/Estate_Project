@@ -15,6 +15,10 @@ const visitSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
+  visitTime: {  // New field for time
+    type: String,
+    required: true
+  },
   message: {
     type: String,
     default: "I am interested in this property."

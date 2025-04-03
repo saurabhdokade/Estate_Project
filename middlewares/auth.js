@@ -5,76 +5,201 @@ const User = require("../model/customerModel");
 const Agent = require("../model/agentModel")
 const Builder = require("../model/builderModel");
 const Admin = require("../model/adminModel")
-exports.isAuthenticatedUser = catchAsyncErrors(async(req,res,next) => {
-    const { token } = req.cookies;
-       
- if(!token) {
-     return next(new ErrorHander("Please Login to access this resource", 401));
- };
 
- const decodedData = jwt.verify(token,process.env.JWT_SECRET);
+// exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
+//   const token = req.cookies.token; // Token from cookies
 
- req.user = await User.findById(decodedData.id);
+//   if (!token) {
+//     return next(new ErrorHander("Unauthorized access. Token required.", 401));
+//   }
 
- next();
-});
-exports.isAuthenticatedAgent = catchAsyncErrors(async (req, res, next) => {
-  const { token } = req.cookies;
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     req.user = await User.findById(decoded.userId); // Find user by ID in MongoDB
 
-  if (!token) {
-    return next(new ErrorHander("Please Login as an Agent to access this resource", 401));
+//     if (!req.user) {
+//       return next(new ErrorHander("User not found.", 404));
+//     }
+
+//     next();
+//   } catch (error) {
+//     return next(new ErrorHander("Invalid or expired token.", 401));
+//   }
+// });
+
+exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
+  const token = req.header("Authorization"); // Token from Authorization header
+
+  if (!token || !token.startsWith("Bearer ")) {
+    return next(new ErrorHander("Unauthorized access. Token required.", 401));
   }
 
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+  try {
+    const tokenValue = token.split(" ")[1]; // Extract token after "Bearer"
+    const decoded = jwt.verify(tokenValue, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.userId); // Find user by ID in MongoDB
 
-  req.agent = await Agent.findById(decodedData.id);
+    if (!req.user) {
+      return next(new ErrorHander("User not found.", 404));
+    }
 
-  next();
+    next();
+  } catch (error) {
+    return next(new ErrorHander("Invalid or expired token.", 401));
+  }
 });
 
-exports.isAuthenticatedBuilder = catchAsyncErrors(async (req, res, next) => {
-  const { token } = req.cookies;
 
-  if (!token) {
+
+// exports.isAuthenticatedBuilder = catchAsyncErrors(async (req, res, next) => {
+//   const { token } = req.cookies;
+
+//   if (!token) {
+//     return next(new ErrorHander("Please Login as a Builder to access this resource", 401));
+//   }
+
+//   const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+
+//   const builder = await Builder.findById(decodedData.id);
+
+//   if (!builder) {
+//     return next(new ErrorHander("Builder not found", 404));
+//   }
+
+//   req.builder = builder;
+
+//   next();
+// });
+
+exports.isAuthenticatedBuilder = catchAsyncErrors(async (req, res, next) => {
+  const token = req.header("Authorization"); // Get token from Authorization header
+
+  if (!token || !token.startsWith("Bearer ")) {
     return next(new ErrorHander("Please Login as a Builder to access this resource", 401));
   }
 
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+  try {
+    const tokenValue = token.split(" ")[1]; // Extract actual token
+    const decodedData = jwt.verify(tokenValue, process.env.JWT_SECRET);
 
-  const builder = await Builder.findById(decodedData.id);
+    const builder = await Builder.findById(decodedData.id);
 
-  if (!builder) {
-    return next(new ErrorHander("Builder not found", 404));
+    if (!builder) {
+      return next(new ErrorHander("Builder not found", 404));
+    }
+
+    req.builder = builder;
+    next();
+  } catch (error) {
+    return next(new ErrorHander("Invalid or expired token.", 401));
   }
-
-  req.builder = builder;
-
-  next();
 });
 
+// Authenticate Agent
+// exports.isAuthenticatedAgent = catchAsyncErrors(async (req, res, next) => {
+//   const token = req.cookies.token; // Token from cookies
+
+//   if (!token) {
+//     return next(new ErrorHander("Unauthorized access. Token required.", 401));
+//   }
+
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     req.agent = await Agent.findById(decoded.userId); // Find agent by ID in MongoDB
+
+//     if (!req.agent) {
+//       return next(new ErrorHander("Agent not found.", 404));
+//     }
+
+//     next();
+//   } catch (error) {
+//     return next(new ErrorHander("Invalid or expired token.", 401));
+//   }
+// });
+
+exports.isAuthenticatedAgent = catchAsyncErrors(async (req, res, next) => {
+  const token = req.header("Authorization"); // Get token from Authorization header
+
+  if (!token || !token.startsWith("Bearer ")) {
+    return next(new ErrorHander("Unauthorized access. Token required.", 401));
+  }
+
+  try {
+    const tokenValue = token.split(" ")[1]; // Extract actual token
+    const decoded = jwt.verify(tokenValue, process.env.JWT_SECRET);
+
+    req.agent = await Agent.findById(decoded.userId); // Find agent by ID in MongoDB
+
+    if (!req.agent) {
+      return next(new ErrorHander("Agent not found.", 404));
+    }
+
+    next();
+  } catch (error) {
+    return next(new ErrorHander("Invalid or expired token.", 401));
+  }
+});
+
+
+
+// exports.isAuthenticatedAgentOrBuilder = catchAsyncErrors(async (req, res, next) => {
+//   const token = req.header("Authorization");// Token from cookies
+
+//   if (!token) {
+//     return next(new ErrorHander("Unauthorized access. Token required.", 401));
+//   }
+
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+//     // Check if the user is an Agent or a Builder
+//     const agent = await Agent.findById(decoded.userId);
+//     const builder = await Builder.findById(decoded.userId);
+
+//     if (!agent && !builder) {
+//       return next(new ErrorHander("User not found", 404));
+//     }
+
+//     // Assign user role to req.user
+//     req.user = agent || builder;
+
+//     next();
+//   } catch (error) {
+//     return next(new ErrorHander("Invalid or expired token.", 401));
+//   }
+// });
 
 exports.isAuthenticatedAgentOrBuilder = catchAsyncErrors(async (req, res, next) => {
-  const { token } = req.cookies;
+  const token = req.header("Authorization"); // Get token from Authorization header
 
-  if (!token) {
-    return next(new ErrorHander("Please Login to access this resource", 401));
+  if (!token || !token.startsWith("Bearer ")) {
+    return next(new ErrorHander("Unauthorized access. Token required.", 401));
   }
 
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+  try {
+    const tokenValue = token.split(" ")[1]; // Extract actual token
+    const decoded = jwt.verify(tokenValue, process.env.JWT_SECRET);
 
-  // Check if the user is an Agent or a Builder
-  const agent = await Agent.findById(decodedData.id);
-  const builder = await Builder.findById(decodedData.id);
+    // Check if the user is an Agent or a Builder
+    const agent = await Agent.findById(decoded.userId);
+    const builder = await Builder.findById(decoded.userId);
 
-  if (!agent && !builder) {
-    return next(new ErrorHander("User not found", 404));
+    if (!agent && !builder) {
+      return next(new ErrorHander("User not found", 404));
+    }
+
+    // Assign user role to req.user
+    req.user = agent || builder;
+    req.role = agent ? "Agent" : "Builder"; // Assign role for further authorization if needed
+
+    next();
+  } catch (error) {
+    return next(new ErrorHander("Invalid or expired token.", 401));
   }
-
-  // Assign user role to req.user
-  req.user = agent || builder;
-
-  next();
 });
+
+
+
 
 exports.isAuthenticatedAdmin = catchAsyncErrors(async (req, res, next) => {
   const { token } = req.cookies;

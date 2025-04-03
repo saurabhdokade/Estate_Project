@@ -84,7 +84,7 @@ router.put("/property/comment/:propertyId", isAuthenticatedAdmin, authorizeRoles
 
 
 //complaint user
-router.get('/admin/complaints/', isAuthenticatedAdmin, getComplaints); // Get all complaints
+router.get('/admin/complaints/', getComplaints); // Get all complaints
 router.put('/complaint/resolve/:id',isAuthenticatedAdmin, resolveComplaint); // Mark a complaint as resolved
 router.delete('/complaint/delete/:id', isAuthenticatedAdmin, deleteComplaint); // Delete a complaint
 router.get("/complaint/:id", isAuthenticatedAdmin, getComplaintById); // Get complaint by ID
