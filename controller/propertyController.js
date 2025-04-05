@@ -1332,8 +1332,6 @@ exports.getFilteredProperties = catchAsyncError(async (req, res, next) => {
     filterConditions["priceDetails.expectedPrice"] = priceFilter;
   }
 
-  // 🔹 Debugging: Log filter conditions
-  console.log("Applied Filters:", JSON.stringify(filterConditions, null, 2));
 
   try {
     const properties = await Property.find(filterConditions);

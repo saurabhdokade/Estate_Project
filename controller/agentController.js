@@ -14,8 +14,14 @@ const crypto = require("crypto");
 const jwt = require('jsonwebtoken');
 const otpGenerator = require('otp-generator');
 const twilio = require("twilio");
+require("dotenv").config(); 
+const accountSid = process.env.TWILIO_ACCOUNT_SID ||  "AC7bb54231c103cfbc47c1392ef09054ee";
+const authToken = process.env.TWILIO_AUTH_TOKEN || "403414025177e98738163ee945c25142";
 const client = new twilio(
-  "AC7bb54231c103cfbc47c1392ef09054ee", "e165af85f29b468f47b7b9dc70778f11"
+  accountSid,authToken
+  // TWILIO_ACCOUNT_SID || "AC7bb54231c103cfbc47c1392ef09054ee",
+  // TWILIO_AUTH_TOKEN || "403414025177e98738163ee945c25142"
+  // "AC7bb54231c103cfbc47c1392ef09054ee", "e165af85f29b468f47b7b9dc70778f11"
 );
 
 exports.registerAgent = async (req, res, next) => {
@@ -81,10 +87,11 @@ exports.sendOTP = async (req, res) => {
     console.log(`OTP for ${phone}: ${otp}`);
 
     // **Try sending OTP via Twilio, but don't fail the API if Twilio fails**
+    const number =  process.env.TWILIO_PHONE_NUMBER 
     try {
       await client.messages.create({
         body: `Your OTP is ${otp}. It expires in 10 minutes.`,
-        from: process.env.TWILIO_PHONE_NUMBER || "+13612667244",
+        from: number|| "+13612667244",
         to: phone,
       });
     } catch (twilioError) {

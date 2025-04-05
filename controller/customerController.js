@@ -192,7 +192,7 @@ exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
 
 // Logout Agent
 exports.logout = catchAsyncErrors(async (req, res, next) => {
-  res.cookie("token", null, {
+  res.header("token", null, {
     expires: new Date(Date.now()),
     httpOnly: true,
   });
@@ -435,7 +435,7 @@ exports.getUserActivity = catchAsyncErrors(async (req, res, next) => {
     .populate("recentlyViewed.propertyId savedProperties.propertyId contactedProperties.propertyId");
 
   if (!activity) {
-    return next(new ErrorHandler("No activity found", 404));
+    return next(new ErrorHander("No activity found", 404));
   }
 
   res.status(200).json({ success: true, activity });
