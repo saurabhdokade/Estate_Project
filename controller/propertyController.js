@@ -25,23 +25,23 @@ exports.createProperty = catchAsyncError(async (req, res, next) => {
     status: 'Active'
   });
 
-  // if (!subscription) {
-  //   return res.status(403).json({
-  //     success: false,
-  //     message: "No Active Subscription Found"
-  //   });
-  // }
+  if (!subscription) {
+    return res.status(403).json({
+      success: false,
+      message: "No Active Subscription Found"
+    });
+  }
 
   // ✅ Count Total Properties Added by the User
   const totalProperties = await Property.countDocuments({ userId: req.user._id });
 
   // ✅ Check Property Limit Based on Plan
-  // if (totalProperties >= subscription.propertyLimit) {
-  //   return res.status(403).json({
-  //     success: false,
-  //     message: `You have reached the property limit of ${subscription.propertyLimit} for your ${subscription.planName} Plan.`
-  //   });
-  // }
+  if (totalProperties >= subscription.propertyLimit) {
+    return res.status(403).json({
+      success: false,
+      message: `You have reached the property limit of ${subscription.propertyLimit} for your ${subscription.planName} Plan.`
+    });
+  }
 
   // ✅ Handle Property Image
   let propertyImages = req.file ? req.file.path : '';

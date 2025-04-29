@@ -14,51 +14,127 @@ const { OAuth2Client } = require("google-auth-library"); // Import OAuth2Client
 const clientt = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || "772146215356-vofbc6i2a4i2jm6b05gsqc0joku37b1i.apps.googleusercontent.com");
 require("dotenv").config();
 
-exports.registerUser = async (req, res, next) => {
-  try {
-    const { phone, name, email, isAgent, agreedToTerms } = req.body;
+// exports.registerUser = async (req, res, next) => {
+//   try {
+//     const { phone, name, email, isAgent, agreedToTerms } = req.body;
 
-    let user = await User.findOne({ phone });
+//     let user = await User.findOne({ phone });
 
-    if (!user || !user.isVerified) {
-      return res.status(400).json({ message: "Phone not verified. Please verify OTP first." });
-    }
+//     if (!user || !user.isVerified) {
+//       return res.status(400).json({ message: "Phone not verified. Please verify OTP first." });
+//     }
 
-    if (user.name && user.email) {
-      return res.status(400).json({ message: "User already exists. Account creation is a one-time process." });
-    }
+//     if (user.name && user.email) {
+//       return res.status(400).json({ message: "User already exists. Account creation is a one-time process." });
+//     }
 
-    user.name = name;
-    user.email = email;
-    user.role = isAgent ? "agent" : "user";
-    user.agreedToTerms = agreedToTerms;
-    await user.save();
+//     user.name = name;
+//     user.email = email;
+//     user.role = isAgent ? "agent" : "user";
+//     user.agreedToTerms = agreedToTerms;
+//     await user.save();
 
-    return res.status(201).json({
-      success: true,
-      message: "Account created successfully.",
-    });
-  } catch (error) {
-    console.error("❌ Error registering user:", error);
-    return res.status(500).json({ success: false, message: "Failed to register user. Please try again." });
+//     return res.status(201).json({
+//       success: true,
+//       message: "Account created successfully.",
+//     });
+//   } catch (error) {
+//     console.error("❌ Error registering user:", error);
+//     return res.status(500).json({ success: false, message: "Failed to register user. Please try again." });
+//   }
+// };
+
+
+exports.registerUser = catchAsyncErrors(async (req, res, next) => {
+  const { phone, name, email, isAgent, agreedToTerms } = req.body;
+  console.log("Registering user:", req.body);
+
+  const user = await User.findOne({ email: phone });
+
+  if (!user || !user.isVerified) {
+    return res.status(400).json({ message: "Phone not verified. Please verify OTP first." });
   }
-};
 
+  user.name = name;
+  user.phone = email;
+  user.role = isAgent ? "agent" : "user";
+  user.agreedToTerms = agreedToTerms;
+  await user.save();
+
+  return res.status(201).json({
+    success: true,
+    message: "Account created successfully.",
+  });
+});
 
 const twilio = require("twilio");
 const client = new twilio(
   "AC7bb54231c103cfbc47c1392ef09054ee", "e165af85f29b468f47b7b9dc70778f11"
 );
 
+// exports.sendOTP = async (req, res) => {
+//   try {
+//     const { phone } = req.body;
+
+//     if (!phone) {
+//       return res.status(400).json({ success: false, message: "Phone number is required" });
+//     }
+
+//     let user = await User.findOne({ phone });
+
+//     // Generate 6-digit OTP and set expiry (10 minutes)
+//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+//     const otpExpire = new Date(Date.now() + 10 * 60 * 1000);
+
+//     let message = "OTP sent successfully.";
+
+//     if (!user) {
+//       // New user → Register
+//       user = new User({ phone, otp, otpExpire, isVerified: false });
+//       await user.save();
+//       message = "OTP sent for registration.";
+//     } else {
+//       // Existing user → Login
+//       user.otp = otp;
+//       user.otpExpire = otpExpire;
+//       await user.save();
+//       message = "OTP sent for login.";
+//     }
+
+//     // **Log OTP for testing**
+//     console.log(`OTP for ${phone}: ${otp}`);
+
+//     // **Try sending OTP via Twilio, but don't fail the API if Twilio fails**
+//     try {
+//       await client.messages.create({
+//         body: `Your OTP is ${otp}. It expires in 10 minutes.`,
+//         from: process.env.TWILIO_PHONE_NUMBER || "+13612667244",
+//         to: phone,
+//       });
+//     } catch (twilioError) {
+//       console.error("⚠ Twilio Error:", twilioError);
+//       message += " (SMS sending failed, but OTP is generated.)";
+//     }
+
+//     // **Always return success response**
+//     return res.status(200).json({ success: true, message });
+
+//   } catch (error) {
+//     console.error("❌ Error sending OTP:", error);
+//     return res.status(500).json({ success: false, message: "Failed to send OTP. Please try again." });
+//   }
+// };
+
+
 exports.sendOTP = async (req, res) => {
   try {
-    const { phone } = req.body;
+    const { email } = req.body;
 
-    if (!phone) {
-      return res.status(400).json({ success: false, message: "Phone number is required" });
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
     }
 
-    let user = await User.findOne({ phone });
+    let user = await User.findOne({ email });
 
     // Generate 6-digit OTP and set expiry (10 minutes)
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -68,7 +144,7 @@ exports.sendOTP = async (req, res) => {
 
     if (!user) {
       // New user → Register
-      user = new User({ phone, otp, otpExpire, isVerified: false });
+      user = new User({ email, otp, otpExpire, isVerified: false });
       await user.save();
       message = "OTP sent for registration.";
     } else {
@@ -80,26 +156,26 @@ exports.sendOTP = async (req, res) => {
     }
 
     // **Log OTP for testing**
-    console.log(`OTP for ${phone}: ${otp}`);
+    console.log(`OTP for ${email}: ${otp}`);
 
-    // **Try sending OTP via Twilio, but don't fail the API if Twilio fails**
+    // **Send Email using your utils/sendEmail function**
     try {
-      await client.messages.create({
-        body: `Your OTP is ${otp}. It expires in 10 minutes.`,
-        from: process.env.TWILIO_PHONE_NUMBER || "+13612667244",
-        to: phone,
+      await sendEmail({
+        email,
+        subject: `Your OTP`,
+        message: `Your OTP is ${otp}. It expires in 10 minutes.`,
       });
-    } catch (twilioError) {
-      console.error("⚠ Twilio Error:", twilioError);
-      message += " (SMS sending failed, but OTP is generated.)";
+    } catch (emailError) {
+      console.error("⚠ Email Sending Error:", emailError);
+      message += " (Email sending failed, but OTP is generated.)";
     }
 
     // **Always return success response**
     return res.status(200).json({ success: true, message });
 
   } catch (error) {
-    console.error("❌ Error sending OTP:", error);
-    return res.status(500).json({ success: false, message: "Failed to send OTP. Please try again." });
+    console.error("❌ Error sending Email OTP:", error);
+    return res.status(500).json({ success: false, message: "Failed to send Email OTP. Please try again." });
   }
 };
 
@@ -113,11 +189,11 @@ exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({ otp });
 
   if (!user) {
-    return next(new ErrorHander("Invalid OTP", 404));
+    return next(new ErrorHandler("Invalid OTP", 404));
   }
 
   if (user.otpExpire < Date.now()) {
-    return next(new ErrorHander("OTP has expired", 400));
+    return next(new ErrorHandler("OTP has expired", 400));
   }
 
   user.isVerified = true;
@@ -127,7 +203,7 @@ exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
 
   // ✅ Generate JWT token
   const token = jwt.sign(
-    { userId: user._id, phone: user.phone },
+    { userId: user._id, email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
@@ -140,7 +216,7 @@ exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
-  const message = user.name && user.email
+  const message = user.name
     ? "OTP verified successfully"
     : "OTP verified. Please complete registration.";
 
@@ -378,6 +454,34 @@ exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
       registrationDate: user.registrationDate,
       activityLogs: user.activityLogs,
     })),
+  });
+});
+
+// Get Single User Details
+exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
+  const userId = req.params.id;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      status: user.status,
+      registrationDate: user.registrationDate,
+      activityLogs: user.activityLogs,
+    },
   });
 });
 

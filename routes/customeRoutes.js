@@ -23,6 +23,7 @@ const {
   sendOTP,
   getNotifications,
   updatePrivacySettings,
+  getUserDetails,
   getAppSettings,
   updateAppSettings,
   updateNotifications
@@ -52,6 +53,7 @@ router.route("/send-otp").post(sendOTP)
 router.route("/password/forgot").post(forgotPassword);
 router.route("/password/reset/:token").put(resetPassword);
 router.route("/users").get(isAuthenticatedUser, apiLimiter, getAllUser); // List all users
+router.route('/users/:id').get(getUserDetails);
 router.route("/users/:id").put(isAuthenticatedUser,apiLimiter, upload.single("userProfile"),updateUserDetails) // Update user role
 router.route("/users/:id").delete(isAuthenticatedUser, apiLimiter, deleteUser); // Delete user
 

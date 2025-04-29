@@ -61,6 +61,7 @@ router.get('/admin/getAllAgentBuilder', isAuthenticatedAdmin, getAllAgentAndBuil
 router.get('/admin/agent/:id', isAuthenticatedAdmin, getAgentDetails);
 router.get('/admin/builder/:id', isAuthenticatedAdmin, getBuilderDetails);
 router.route("/admin/users/:id").delete(isAuthenticatedAdmin, apiLimiter, deleteUser);
+
 //property
 router.put('/property/reject/:id', isAuthenticatedAdmin,rejectProperty);
 router.put('/property/verify/:id', isAuthenticatedAdmin,verifyProperty);

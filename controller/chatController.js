@@ -148,13 +148,13 @@ exports.getNotificationDetails = catchAsyncErrors(async (req, res, next) => {
   const { notificationId } = req.params;
 
   if (!notificationId) {
-    return next(new ErrorHandler("Notification ID is required", 400));
+    return next(new ErrorHander("Notification ID is required", 400));
   }
 
   // ✅ Find Notification by ID
   const notification = await Notification.findById(notificationId);
   if (!notification) {
-    return next(new ErrorHandler("Notification not found", 404));
+    return next(new ErrorHander("Notification not found", 404));
   }
 
   let propertyDetails = null;
