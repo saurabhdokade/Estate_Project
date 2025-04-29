@@ -20,7 +20,7 @@ const server = http.createServer(app);
 //   })
 // })
 // Start the Server
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
